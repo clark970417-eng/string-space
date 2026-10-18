@@ -127,7 +127,7 @@ npm run test:production
 - Regenerate fixtures with `node scripts/create-alignment-fixture.mjs` after starting the server on port 5189. Test recordings are original harmonic synthesis fixtures; their results do not establish accuracy for arbitrary real songs.
 - If the test host's audio hardware clock malfunctions, Chromium tests optionally support `PRACTICE_SILENT_SINK=1` to route the final test output to a virtual sink. This does not change the product synchronization clock. Use of this option is recorded in test reports; WebKit has no equivalent fallback.
 
-See [TEST_REPORT.md](TEST_REPORT.md) for detailed results and historical fixes. The test report is currently in Traditional Chinese.
+See [TEST_REPORT.md](TEST_REPORT.md) for detailed results and historical fixes.
 
 ## Modules
 

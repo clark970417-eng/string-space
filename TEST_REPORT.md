@@ -1,235 +1,231 @@
-# 弦間：實際驗收紀錄
+# String Space: Verification Report
 
-最新測試日期：2026-10-18。執行環境：macOS、Node.js 24.18.0、npm 11.16.0、Playwright 1.64.1。使用 alphaTab 1.8.4 的實際解析器、渲染器與音訊引擎。
+Latest test date: 2026-10-18. Environment: macOS, Node.js 24.18.0, npm 11.16.0, Playwright 1.64.1. Tests use the actual alphaTab 1.8.4 parser, renderer, and audio engine.
 
-## 最新確認：正式版 PDF＋音檔完整使用流程（2026-10-18）
+## Latest verification: complete production PDF + audio workflow (2026-10-18)
 
-直接測試使用者目前開啟的 `http://localhost:4178/` 正式產物；應用程式功能與 `f2bb0a2` 相同，本輪僅補強測試與證據，沒有改動產品程式。指令：
+Tested the production build currently available at `http://localhost:4178/`. Application behavior is unchanged from `f2bb0a2`; this round strengthened tests and evidence without changing product code. Command:
 
 ```sh
 PRACTICE_TEST_URL=http://localhost:4178 npx playwright test tests/browser/auto-alignment.spec.ts --project=chromium --project=webkit
 ```
 
-**4 / 4 通過**：Chromium 桌面與 WebKit iPhone 13 行動模擬各測成功流程與錯配拒絕。使用真實兩頁 PDF 與 7 秒 PCM WAV，透過檔案選擇器上傳、實際 OCR、校對、音訊解碼及背景 DTW 分析。自動候選建立前沒有手填時間；原始 PDF 音符從 IndexedDB 保存資料讀回，與原稿八音相符。所有觀察使用正式 UI、儲存內容及原生 HTMLAudioElement，不依賴開發版 `__practice`。
+**4 / 4 passed**: successful alignment and mismatch rejection in both desktop Chromium and WebKit with iPhone 13 mobile emulation. Tests uploaded a real two-page PDF and seven-second PCM WAV through file inputs, then performed actual OCR, correction, audio decoding, and background DTW analysis. No timestamps were entered manually before automatic candidates were generated. PDF notes read back from IndexedDB matched the original eight pitches. Observations used the production UI, stored data, and native HTMLAudioElement, without the development-only `__practice` interface.
 
-| 量測 | Chromium | WebKit 行動模擬 |
+| Measurement | Chromium | WebKit mobile emulation |
 | --- | --- | --- |
-| 自動小節時間（秒） | 0.80、3.12、5.76 | 0.80、3.12、5.76 |
-| 真實邊界（秒） | 0.80、3.00、5.80 | 0.80、3.00、5.80 |
-| 本次最大自動候選誤差 | 0.12 秒 | 0.12 秒 |
-| 實際音訊 RMS | 0.128018 | 0.117132 |
-| 正常播放的進度／媒體時鐘抽樣差 | 0.011134 秒 | 0.007743 秒 |
-| 原生半速實際量測比例 | 0.499812 | 0.499542 |
-| 循環中的進度／媒體時鐘抽樣差 | 0.011848 秒 | 0.023913 秒 |
+| Automatic bar timestamps (seconds) | 0.80, 3.12, 5.76 | 0.80, 3.12, 5.76 |
+| Ground-truth boundaries (seconds) | 0.80, 3.00, 5.80 | 0.80, 3.00, 5.80 |
+| Maximum candidate error in this run | 0.12 seconds | 0.12 seconds |
+| Actual audio RMS | 0.128018 | 0.117132 |
+| Sampled progress/media-clock difference during normal playback | 0.011134 seconds | 0.007743 seconds |
+| Measured native half-speed ratio | 0.499812 | 0.499542 |
+| Sampled progress/media-clock difference during looping | 0.011848 seconds | 0.023913 seconds |
 
-成功流程另外確認：
-- 候選未人工勾選前不能保存；可在原 PDF 預覽第二頁，至少半個目前小節框進入可視區。
-- 人工將第二小節修正到 3.04 秒後，可確認並切換錄音模式；原 PDF 小節高亮與第二頁隨真正音檔時間切換。
-- 暫停後原生媒體時間與畫面進度均保持不動；點第一小節跳回自動標定的起點。
-- 保音高屬性為 true，原生媒體在 0.5× 設定下，依同一瀏覽器的 performance.now 量到約 0.5 倍。
-- 第二小節以 1.5× 進行 A–B 循環，包含初始定位與至少兩次返回，仍保持小節狀態及音檔時間對應。
-- 關閉循環並重開頁面後，錄音配對、自動候選與人工修改仍存在；行動版沒有水平溢出。
-- 不相符音檔會拒絕對齊，不覆蓋既有人工時間；沒有第三方上傳請求。
+The successful workflow also verified:
 
-**量測處理**：最初擴充測試仍用未啟用循環時的按鈕文字找按鈕，啟用後文字會變為「2–2 循環」，已修正測試選擇器。WebKit 的聲音分析器額外接入 Web Audio 後會影響啟動緩衝，因此聲音 RMS 量測完成後，透過真實配對 UI 重新確認同檔，恢復產品原生音訊路徑，再量測半速／循環；不修改產品播放率或時鐘。獨立原生音檔半速對照亦量得 0.499928。最終正式版四項完整重跑皆通過，未使用虛擬音訊輸出。
+- Saving is disabled until the user checks the confirmation box. The original PDF preview reaches page two, with at least half of the current bar region visible.
+- After manually correcting the second bar to 3.04 seconds, confirmation switches to recording mode. PDF highlighting and page changes follow the actual audio time.
+- Pausing stops both native media time and visible progress. Clicking the first bar seeks to the automatically identified start.
+- Pitch preservation is enabled. At a 0.5× setting, native playback measures approximately 0.5 times real time using the same browser's performance.now clock.
+- Bar two loops at 1.5×, including the initial seek and at least two returns, while bar state remains consistent with audio time.
+- After disabling the loop and reloading, the recording pairing, automatic candidates, and manual correction remain saved. The mobile layout has no horizontal overflow.
+- Unrelated audio is rejected without overwriting existing manual timestamps. No third-party upload requests occur.
 
-證據：`artifacts/auto-alignment-verification-chromium.json`、`artifacts/auto-alignment-verification-webkit.json` 與相對應畫面截圖。這些數字是本次受控檔案的抽樣結果，不代表所有錄音或實體手機的誤差上限。PDF 仍須先辨識並校對音符；實際檔案測試為 PCM WAV，未在本輪新增 MP3／M4A 檔案測試。
+**Measurement adjustments:** the initial extended test searched for the inactive loop button label after activation, when the label changes to the localized equivalent of “2–2 loop”; the selector was corrected. Connecting an additional Web Audio analyzer affected WebKit startup buffering. After RMS measurement, the test therefore re-pairs the same file through the actual UI to restore the product's native audio path before measuring speed and looping. Product playback rate and clock were unchanged. An independent native-audio half-speed control measured 0.499928. The final full production rerun passed all four tests without a virtual audio output.
 
-## 歷史回合：音檔與 PDF 自動對齊（2026-10-18）
+Evidence: `artifacts/auto-alignment-verification-chromium.json`, `artifacts/auto-alignment-verification-webkit.json`, and corresponding screenshots. These are sampled results for controlled fixtures, not error guarantees for every recording or physical phone. PDF notes still require recognition and correction first. Actual file tests used PCM WAV; this round added no MP3/M4A file tests.
 
-| 檢查 | 結果 |
+## Historical round: automatic audio/PDF alignment (2026-10-18)
+
+| Check | Result |
 | --- | --- |
-| `npm test` | **46 / 46 通過**，9 個測試檔。 |
-| `npm run build` | 通過；原有大型 chunk 提示仍存在。 |
-| Chromium＋WebKit 播放／匯入回歸 | **22 / 22 通過**，包含兩種瀏覽器的實際 PDF＋WAV 自動對齊、錯配拒絕與保存恢復。 |
-| 預覽可視範圍補驗 | **4 / 4 通過**；新增目前原譜框至少 50% 在可視區域的斷言，證實對話框內會捲到目前小節。 |
-| 正式版六線譜回歸 | **24 / 24 通過**（19 Chromium、5 WebKit）。 |
-| `npm run test:production` | Chromium、WebKit 均通過音訊採樣、游標、暫停、跳轉、速度、資源與版面。 |
-| 乾淨副本安裝、測試與建置 | 通過：僅匯出將提交的檔案，公開檔案檢查 0 問題／0 警告；`npm ci`、46 項單元測試與正式建置全部成功，產物雜湊名稱相同。 |
+| `npm test` | **46 / 46 passed**, nine test files. |
+| `npm run build` | Passed; the existing large-chunk warning remains. |
+| Chromium + WebKit playback/import regression | **22 / 22 passed**, including real PDF + WAV automatic alignment, mismatch rejection, and persistence in both browsers. |
+| Additional preview-visibility verification | **4 / 4 passed**; an assertion requires at least 50% of the current original-score region to be visible, verifying scrolling inside the dialog. |
+| Production tablature regression | **24 / 24 passed**: 19 Chromium, five WebKit. |
+| `npm run test:production` | Both browsers passed audio sampling, cursor, pause, seek, speed, resource, and layout checks. |
+| Clean-copy installation, tests, and build | Passed: exported only files intended for commit; public-file audit reported zero issues and zero warnings. `npm ci`, all 46 unit tests, and production build succeeded, with identical hashed output filenames. |
 
-**實際使用流程**：上傳真實兩頁 PDF `tests/fixtures/alignment/two-page-study.pdf`，透過本機 OCR 讀出兩小節的實際音符 `[64,67,71,66,69,65,72,70]`；完成調弦、節奏與各小節校對。上傳 7 秒 PCM WAV `uneven-performance.wav`，含 0.8 秒前奏、非等速音符與尾段。測試不輸入任何對齊秒數，按自動分析後驗證三個候選時間距實際邊界 `[0.8,3,5.8]` 都小於 **0.24 秒**，確認鈕在人工勾選前停用。桌面與手機皆執行真正音檔解碼、Web Worker 分析與原譜換頁預覽，沒有模擬辨識或固定速度填值。
+**Actual workflow:** uploaded `tests/fixtures/alignment/two-page-study.pdf`. Local OCR read the actual pitches `[64,67,71,66,69,65,72,70]` across two bars; tuning, rhythm, and each bar were reviewed. Uploaded seven-second PCM WAV `uneven-performance.wav`, containing a 0.8-second introduction, uneven note timing, and an ending. No alignment timestamps were entered. Automatic analysis produced three candidates, each within **0.24 seconds** of `[0.8,3,5.8]`. Confirmation remained disabled until checked. Desktop and mobile tests performed actual decoding, Web Worker analysis, and original-PDF page previews, without mocked recognition or fixed-speed timestamp generation.
 
-預覽後把第二小節人工改為 3.04 秒，介面顯示已人工修改；確認保存會進入錄音模式，以音檔時間帶動原始 PDF 小節框、游標與第二頁。檢查顯示時間與媒體時間差 < 0.12 秒；重新載入後，自動結果與手動修改仍保留。測試不產生第三方網路請求。對不相符的低音錄音，分析拒絕配對，原有手動時間不被覆蓋，也不能確認不完整資料。
+After preview, the second bar was manually changed to 3.04 seconds and marked as edited. Saving activated recording mode, with original PDF regions, cursor, and page two following audio time. Display/media-clock difference was below 0.12 seconds. Reload preserved automatic results and edits. No third-party network requests occurred. An unrelated low-pitched recording was rejected without overwriting manual timestamps; incomplete data could not be confirmed.
 
-**聲學方法**：使用固定版本、MIT 授權的 fft.js 4.0.4 計算實際頻譜，取得 chroma；以 subsequence DTW 的 `(1,1)、(1,2)、(2,1)` 路徑比對數位樂譜的音高輪廓。原生 MIDI 展開保留反覆、延音與速度資料；允許自由前奏／尾奏與有限局部速度變化。單元測試另驗證非等速旋律、兩次反覆、和弦聲部、音高變化不足、無聲、錯曲、過短與超出限制的檔案。沒有使用 AI 服務或上傳錄音。最大 10 分鐘／100 MB；DTW 矩陣約 520 萬格內，背景分析可取消並有 120 秒逾時。
+**Acoustic method:** pinned MIT-licensed fft.js 4.0.4 computes spectra and chroma. Subsequence DTW compares the digital score's pitch contour using `(1,1)`, `(1,2)`, and `(2,1)` steps. Native MIDI expansion retains repeats, ties, and tempo data, allowing introductions, endings, and limited local tempo variation. Unit tests also cover uneven melodies, two repeat passes, chord parts, insufficient pitch variation, silence, unrelated audio, short files, and input limits. No AI service or recording upload is used. Limits are 10 minutes/100 MB, approximately 5.2 million DTW cells, cancellation, and a 120-second timeout.
 
-**預覽與跟譜**：辨識時保存實際小節區域與頁碼，錄音模式可跟隨原 PDF，並可切回數位譜；這些座標來自原圖裁切，不是預設框線。舊資料若沒有座標，可先跟隨數位譜，重新辨識可取得原 PDF 區域。相似度只表示特徵配對，不是正確率；低相似、純休止與重複段落會提示校正，所有候選須人工確認才正式啟用。
+**Preview and following:** recognition saves actual bar regions and page numbers derived from source-image crops. Recording mode follows the original PDF or the digital score. Older data without coordinates can follow the digital score; recognition can be repeated to obtain PDF regions. Similarity describes feature agreement, not accuracy. Low similarity, silent bars, and repeated passages prompt correction; every candidate requires user confirmation before activation.
 
-**本輪修正與失敗紀錄**：初次 Chromium 測試發現分析內容展開使對話框重排，點擊被當作背景點擊而關閉；已改為必須在對話框外按下、放開才關閉。另一測試把 `.2` 與 `0.2` 的輸入字串當成不同數值，已統一測試輸入。完整回歸另發現 PDF 換頁瞬間把上一頁影像貼上新頁碼，導致框選仍碰到舊圖；已綁定圖片真正完成的頁碼後再顯示，22 項全數重跑通過。預覽跟隨另改為捲動對話框自身，避免只捲動背景頁面；4 項針對性補驗通過。fft.js 的授權位於官方 npm README，已從原文完整擷取並隨專案提供。
+**Fixes and failures:** the first Chromium test found that expanding analysis content reflowed the dialog and turned a click into a backdrop dismissal. Dismissal now requires both pointer-down and pointer-up outside the dialog. Another test treated `.2` and `0.2` input strings as different values; test input was normalized. Full regression found that PDF page changes briefly displayed the old image under a new page number, allowing selections on the wrong image. Rendering now waits for the matching page image; all 22 tests passed on rerun. Preview following was changed to scroll the dialog itself rather than only the background; four targeted checks passed. The fft.js license was extracted in full from its official npm README and included in the project.
 
-**驗收邊界**：測試採原創清晰印刷 PDF 與合成諧波錄音，不等於任意商業歌曲、真人演奏或斜拍譜的準確率。PDF 音符仍須先辨識與校對；只有手動小節框無法進行音高自動配對，會保留手動校時。常數和弦、移調、人聲／密集伴奏、額外反覆、漏彈與極端變速可能失敗或錯配。小節內游標仍為時間內插；跨反覆／房號／跳轉的條件延音合成仍有限制。實際檔案驗證為 PCM WAV；MP3／M4A 依瀏覽器解碼能力。
+**Scope:** fixtures are original clear printed PDFs and synthesized harmonic recordings, not accuracy measurements for commercial songs, human performances, or angled photographs. PDF notes must first be recognized and corrected. Manual bar regions alone cannot support pitch-based alignment, so manual timing remains available. Constant chords, transposition, vocals, dense accompaniment, extra repeats, omitted notes, and extreme tempo changes may fail or mismatch. Within-bar cursors interpolate timestamps. Conditional synthesized ties across repeat, ending, or jump boundaries remain limited. File verification used PCM WAV; MP3/M4A depend on browser decoding.
 
-所有本輪音訊測試未啟用虛擬音訊輸出。未重啟桌面應用程式或音訊服務。證據：`artifacts/auto-alignment-chromium.png`、`artifacts/auto-alignment-webkit.png`、`artifacts/production-smoke.json`；重現方式與原始研究參考見 README。
+No audio tests in this round used virtual output. Neither the desktop app nor the audio service was restarted. Evidence: `artifacts/auto-alignment-chromium.png`, `artifacts/auto-alignment-webkit.png`, and `artifacts/production-smoke.json`. Reproduction instructions and research references are in README.
 
-以下是歷史回合，當前自動對齊能力以上述紀錄為準。
+The following sections are historical; the current automatic alignment capabilities are described above.
 
-## 歷史回合：PDF＋音檔同步、巢狀反覆與人工跳轉（2026-10-18）
+## Historical round: PDF/audio synchronization, nested repeats, and manual jumps (2026-10-18)
 
-| 檢查 | 本輪結果 |
+| Check | Result in this round |
 | --- | --- |
-| `npm test` | **40 / 40 通過**，8 個測試檔。 |
-| `npm run build` | 通過，既有大型 chunk 提示仍存在。 |
-| Chromium／WebKit 播放器 | **18 個情境全部驗證通過**：整輪 17 通過、1 發現保存時試聽未立即停止；修正後該項重跑通過。 |
-| 正式版 `PRACTICE_TEST_URL=http://localhost:4178 npm run test:tab` | **24 / 24 通過**：19 Chromium、5 WebKit，包含新 D.C. 校對、保存、真正播放回跳。 |
-| `npm run test:production` | **Chromium、WebKit 均通過**音訊取樣、游標、暫停、跳轉、速度、資源與版面。 |
+| `npm test` | **40 / 40 passed**, eight test files. |
+| `npm run build` | Passed; existing large-chunk warning remains. |
+| Chromium/WebKit player | **All 18 scenarios verified**: initial full run had 17 passes and one failure because preview audio did not stop immediately on save; the failing case passed after correction. |
+| Production `PRACTICE_TEST_URL=http://localhost:4178 npm run test:tab` | **24 / 24 passed**: 19 Chromium, five WebKit, including new D.C. correction, persistence, and actual playback jumps. |
+| `npm run test:production` | **Both Chromium and WebKit passed** audio sampling, cursor, pause, seek, speed, resource, and layout checks. |
 
-**PDF＋音檔真實上傳驗收**：使用本專案兩頁六線譜 PDF `tests/fixtures/tab/cross-page-ties.pdf` 與 12 秒 PCM WAV `tests/fixtures/test-tone.wav`，經檔案選擇器上傳；沒有注入假的匯入結果。兩頁各框一小節，在音檔校對畫面看到原譜，以實際媒體定位＋新「記下目前時間並到下一小節」按鈕記下第一個時間，再填入 `[1, 3, 7]` 秒。兩小節分別 2 秒／4 秒，刻意不等速，排除固定捲動的假同步。
+**Real PDF/audio uploads:** uploaded the project's two-page tablature PDF `tests/fixtures/tab/cross-page-ties.pdf` and 12-second PCM WAV `tests/fixtures/test-tone.wav` through file inputs, without injecting fake import results. Marked one bar per page. The alignment screen displayed the original score; actual media seeking and the new “Mark current time and advance to next bar” control recorded the first timestamp, followed by `[1, 3, 7]` seconds. The bars deliberately lasted two and four seconds to rule out fixed-speed scrolling.
 
-Chromium 與手機 WebKit 都驗證：錯序時間不能保存、確認後自動選音檔模式、真實上傳音檔經 MediaElementSource／AnalyserNode 讀出 RMS > 0.001、合成引擎保持停止、顯示時間與媒體時間差 < 0.12 秒、非等速 tick 映射誤差 < 150 ticks、第二小節切至 PDF 第二頁、目前框與游標顯示、暫停 tick 不動、點第一小節定位音檔 1 秒、0.5× 且 preservesPitch=true、IndexedDB 保存後重開恢復音檔與位置、無水平溢出。重新校對確認原譜後，舊配對被清除，防止改動樂譜仍沿用舊時間。原有音檔檔尾循環、A–B 多次循環、變速、進度跳轉及中斷測試仍通過。
+Both Chromium and mobile WebKit verified: out-of-order timestamps cannot be saved; confirmation selects recording mode; the actual uploaded audio yields RMS > 0.001 through MediaElementSource/AnalyserNode; the synthesizer remains stopped; display/media time differs by less than 0.12 seconds; variable-tempo tick mapping error is below 150 ticks; bar two opens PDF page two with its region and cursor visible; paused ticks remain stationary; clicking bar one seeks to one second; 0.5× uses preservesPitch=true; IndexedDB reload restores audio and position; and no horizontal overflow occurs. Reconfirming an edited original score clears old pairing to prevent stale mappings. Existing end-of-file loops, repeated A–B loops, speed, seek, and interruption tests still passed.
 
-**本輪修正**：配對畫面加入原譜對照、選取小節與連續記時；保存後自動進入音檔模式；等待資料寫入後才關閉視窗；按保存立即暫停試聽，避免等待期間仍播放；媒體 metadata 與樂譜時間線載入完成時重新套用保存的播放位置；原譜手動翻頁暫停跟隨。首輪新增測試在重新校對時漏點手動標記入口，修正測試後桌面與手機均通過。初次開發測試連到另個專案佔用的 5178，改用獨立 5189 後驗證正確應用；沒有終止另一個專案。
+**Fixes:** added original-score comparison, bar selection, and sequential timestamp marking to the pairing screen; automatically selected audio mode after save; waited for storage writes before closing; paused preview immediately on Save; reapplied the stored position after metadata and timeline load; and suspended following after manual PDF page changes. An initial new test omitted the manual-marking entry point during re-review; both browser flows passed after fixing the test. Initial development tests reached another project occupying port 5178; switching to dedicated port 5189 verified the correct app without terminating the other project.
 
-**跳轉能力**：兩層巢狀反覆（2–4 遍）原生序列為 `1,2,3,2,3,4,1,2,3,2,3,4`；三層、未閉合與混用房號被阻止。新增人工 D.C.／D.S.、al Fine、Fine、Segno 校對及缺目標檢查。D.C. al Fine 的保存還原與真正畫面播放序列 `1,2,3,1,2` 均通過；D.S. al Fine 原生 MIDI 序列 `1,2,3,4,2,3` 通過。D.C. 回跳後來源音重新發聲，段內延音目的不另發 NoteOn：攻擊 ticks 為 `0,3840,7680,11520,15360`，兩次來源皆延長 3840 ticks。這不等於跨跳轉邊界的條件延音已完成。
+**Jump behavior:** two-level nested repeats, with 2–4 passes, produced native sequence `1,2,3,2,3,4,1,2,3,2,3,4`. Three levels, unclosed repeats, and combinations with endings were rejected. Added manual D.C./D.S., al Fine, Fine, and Segno correction with missing-target validation. D.C. al Fine persisted and played the actual visible sequence `1,2,3,1,2`; D.S. al Fine produced native MIDI sequence `1,2,3,4,2,3`. After D.C., the source note attacked again, while an internal tie destination emitted no additional NoteOn. Attack ticks were `0,3840,7680,11520,15360`; both source occurrences lasted 3840 ticks. This does not establish support for conditional ties across jump boundaries.
 
-**WebKit 舊限制狀態**：本輪獨立振盪器測試中 Chromium／WebKit 音訊時鐘正常前進且有波形；正式音訊檢查兩者通過。所有本輪測試**沒有**設定 `PRACTICE_SILENT_SINK`，沒有以虛擬輸出代替。未重啟桌面應用程式或主機音訊服務；不宣稱修復了前次主機狀態，也不等於真人 iPhone 硬體／藍牙延遲驗證。
+**Earlier WebKit limitation:** independent oscillator checks in this round showed advancing clocks and waveforms in both browsers; both passed production audio checks. No test set `PRACTICE_SILENT_SINK` or substituted virtual output. Neither the desktop app nor host audio service was restarted. This does not claim to have fixed the previous host state or to verify physical iPhone hardware/Bluetooth latency.
 
-**仍存在的限制**：
-- PDF／圖片辨識仍需人工核對；未保證任意手寫、斜拍或複雜出版譜的準確度。
-- PDF 配錄音是逐小節人工校時；小節內游標為內插，沒有自動音檔對齊或逐音符追蹤。測試使用自製 PDF＋WAV，未取得使用者實際歌曲檔案。MP3／M4A 依瀏覽器解碼能力，這輪未以檔案測試。
-- 跨反覆、不同房號或 D.C.／D.S. 邊界的條件延音合成尚未支援，校對會取消連結並要求確認。原錄音播放本身不會重新合成或改寫錄音的延音。
-- 巢狀反覆暫不混用房號；D.C.／D.S. 暫不混用反覆或房號。Coda、複雜多跳轉及跳轉文字 OCR 尚未完成。
+**Remaining limitations at that time:**
 
-輸出證據：`artifacts/production-smoke.json`、`artifacts/pdf-audio-chromium.png`、`artifacts/pdf-audio-webkit.png`。測試命令：`npm test`、`npm run test:e2e`、`PRACTICE_TEST_URL=http://localhost:4178 npm run test:tab`、`npm run test:production`。開發測試使用 5189，正式預覽使用 4178。
+- PDF/image recognition required review, without guarantees for arbitrary handwriting, angled photographs, or complex published scores.
+- PDF/recording timing was manual per bar, with within-bar interpolation, no automatic alignment, and no note-level tracking. Tests used original PDF/WAV fixtures, not the user's actual song files. MP3/M4A decoding was browser-dependent and not file-tested in this round.
+- Conditional synthesized ties across repeats, different endings, or D.C./D.S. boundaries were unsupported. Correction removed the link and required confirmation. Original recording playback does not resynthesize or alter recorded ties.
+- Nested repeats could not combine with endings; D.C./D.S. could not combine with repeats/endings. Coda, complex multiple jumps, and jump-text OCR were incomplete.
 
-以下是歷史紀錄，當前狀態以上述 2026-10-18 回合為準。
+Evidence: `artifacts/production-smoke.json`, `artifacts/pdf-audio-chromium.png`, `artifacts/pdf-audio-webkit.png`. Commands: `npm test`, `npm run test:e2e`, `PRACTICE_TEST_URL=http://localhost:4178 npm run test:tab`, `npm run test:production`. Development used port 5189; production preview used 4178.
 
-## 歷史回合：反覆記號與一、二房（2026-10-15）
+The following records are historical; the later 2026-10-18 sections above take precedence.
 
-| 檢查 | 本輪最終結果 |
+## Historical round: repeats and first/second endings (2026-10-15)
+
+| Check | Final result in this round |
 | --- | --- |
-| `npm test` | **37 / 37 通過**，8 個測試檔。 |
-| `npm run build` | 通過，原有大型 chunk 提示仍存在。 |
-| 正式版 TAB Chromium | **18 / 18 通過**，使用下述測試虛擬音訊輸出。 |
-| Chromium 播放器回歸 | **15 / 15 通過**，使用相同音訊輸出設定。 |
-| WebKit 行動校對 | **4 / 4 通過**：連音、附點、跨列延音草稿、反覆房號校對與保存。 |
-| Chromium 正式版音訊檢查 | 通過實際合成採樣、暫停、游標、跳轉、速度、資源與版面；虛擬輸出末端。 |
-| WebKit／實體音訊輸出 | **本輪未完成驗證**，主機音訊時鐘異常；不引用前輪成功結果代替。 |
+| `npm test` | **37 / 37 passed**, eight test files. |
+| `npm run build` | Passed; existing large-chunk warning remains. |
+| Production TAB Chromium | **18 / 18 passed**, using the test virtual output described below. |
+| Chromium player regression | **15 / 15 passed**, using the same output setting. |
+| WebKit mobile correction | **4 / 4 passed**: tuplets, dots, cross-system tie drafts, and repeat/ending correction and persistence. |
+| Chromium production audio | Passed actual synthesis sampling, pause, cursor, seek, speed, resources, and layout with a virtual output sink. |
+| WebKit/physical audio output | **Not verified in this round** because of abnormal host audio-clock behavior. Earlier successes were not substituted. |
 
-PNG 與 PDF 皆從實際雙線圓點、括線及房號讀出 3 小節的 `1 → 2 → 1 → 3`。校對測試修改總遍數為 3 後，一二房驗證阻止確認；恢復 2 後通過。實際 MIDI 展開順序為 `[0,1,0,2]`，跳回來源音在 7680 ticks 有 NoteOn，延音目的在 8640 ticks 沒有第二次 NoteOn。160 BPM 時，瀏覽器同幀讀取小節／進度／游標，於約 3 秒跳回第 1 小節；3200–3600 毫秒量測到 RMS > 0.00001，隨後進入二房。原有延音、A–B 循環、暫停、變速、進度跳轉與長譜跟隨回歸通過。
+PNG and PDF recognition read actual double barlines, dots, brackets, and ending numbers to produce the three-bar order `1 → 2 → 1 → 3`. Changing the pass count to three blocked confirmation for first/second endings; restoring two allowed it. Actual expanded MIDI order was `[0,1,0,2]`. The repeated source attacked at 7680 ticks; the tie destination at 8640 emitted no second NoteOn. At 160 BPM, same-frame browser observations of bar/progress/cursor showed a return to bar one at approximately three seconds; RMS > 0.00001 was measured during 3200–3600 ms, followed by the second ending. Existing tie, A–B loop, pause, speed, seek, and long-score-following regressions passed.
 
-另有單元測試驗證普通反覆 3 遍、多小節一二房、缺少二房／巢狀／未閉合標記拒絕，以及反覆段落內延音每遍只觸發一次、時值 3840 ticks。雙線第二條直線曾被 OCR 誤當品格 1，已在數字候選階段排除貫穿譜線的直線並加入回歸測試。兩項草稿測試曾在非同步保存完成前讀取或重新整理，已等待保存流程關閉對話框，再重跑全套 TAB 18 項通過。
+Unit tests also verified ordinary three-pass repeats, multi-bar first/second endings, rejection of missing second endings/nested/unclosed markings, and one attack per tied source per repeat pass with 3840-tick duration. OCR initially read the second repeat barline as fret 1; digit candidates now exclude lines crossing the staff, with a regression test. Two draft tests initially read or reloaded before asynchronous saving completed; after waiting for the save dialog to close, all 18 TAB tests passed.
 
-**音訊環境診斷與測試方法**：普通 Chromium 的獨立振盪器測試等待 700 毫秒後，AudioContext 雖為 running，currentTime 仍停於約 0.0053 秒；WebKit 為 0 秒且零輸出。既有示範曲正式音訊檢查亦失敗，並非只有新反覆曲目。Chromium 使用官方 `--disable-audio-output` 後，同樣振盪器的 currentTime 前進到約 0.709 秒，實際波形存在。因此加入可選 `PRACTICE_SILENT_SINK=1`，僅替換測試瀏覽器的作業系統輸出末端，仍使用真實合成器、AudioContext 時間、MIDI 與 AnalyserNode；未改產品音訊邏輯，也沒有用固定計時器推動產品游標。WebKit 不宣稱音訊通過；僅完成上述 4 項非播放校對測試。未重啟應用程式或音訊服務。
+**Audio environment diagnosis:** after waiting 700 ms, a standalone Chromium oscillator's AudioContext was running but currentTime remained near 0.0053 seconds; WebKit remained at zero with no output. The existing demo's production audio check also failed, so the issue was not specific to repeats. Chromium's `--disable-audio-output` allowed the same oscillator to advance to approximately 0.709 seconds with a real waveform. An optional `PRACTICE_SILENT_SINK=1` therefore replaced only the test browser's final operating-system output sink, retaining actual synthesis, AudioContext time, MIDI, and AnalyserNode. Product audio logic was unchanged; no fixed timer drove its cursor. WebKit audio was not reported as passed; only the four non-playback correction tests passed. No app or audio service restart occurred.
 
-**功能限制**：只支援平坦反覆及連續一／二房（房號限兩遍），反覆次數預設 2 且可人工改 2–4；巢狀、D.C.／D.S.／Coda、跨譜列房號、多房與混合標記尚未自動處理。跨反覆起點／結束或不同房號邊界的延音暫不支援，校對會取消並明示重新撥弦、要求全譜重新確認；不能將此描述成已還原有條件的跨房延音。段落內、同房號內的延音保留。測試譜清晰印刷，不能宣稱各類原稿準確率。
+**Limitations at that time:** only flat repeats and consecutive first/second endings were supported, with endings restricted to two passes. Repeat count defaulted to two and could be edited to 2–4. Nested repeats, D.C./D.S./Coda, endings spanning systems, additional endings, and mixed markings were not automatically handled. Ties crossing repeat starts/ends or different ending boundaries were removed with an explicit reattack warning and full-score reconfirmation; conditional cross-ending ties were not restored. Internal ties and ties within the same ending remained. Clear printed fixtures do not establish accuracy for arbitrary sources.
 
-範例：`tests/fixtures/tab/repeat-endings.png`、`tests/fixtures/tab/repeat-endings.pdf`。重現指令與官方資料依據見 README 最後一節。
+Fixtures: `tests/fixtures/tab/repeat-endings.png`, `tests/fixtures/tab/repeat-endings.pdf`. Reproduction commands and official-source references were documented in README at that time.
 
-以下保留歷史紀錄，本輪狀態以本節為準。
+## Historical round: cross-system and cross-page ties (2026-10-15)
 
-## 歷史回合：跨譜列與跨頁延音（2026-10-15）
-
-| 檢查 | 最終結果 |
+| Check | Final result |
 | --- | --- |
-| `npm test` | **32 / 32 通過**，7 個測試檔。 |
-| `npm run build` | 通過，既有大型 chunk 提示仍存在。 |
-| 正式版 `PRACTICE_TEST_URL=http://localhost:4178 npm run test:tab` | **20 / 20 通過**：16 Chromium、4 行動 WebKit。 |
-| `npm run test:e2e` | 最終完整重跑 **16 / 16 通過**。 |
-| `npm run test:production` | **Chromium 與 WebKit 皆通過**實際音訊、游標、暫停、跳轉、速度、資源與版面。 |
+| `npm test` | **32 / 32 passed**, seven test files. |
+| `npm run build` | Passed; existing large-chunk warning remains. |
+| Production `PRACTICE_TEST_URL=http://localhost:4178 npm run test:tab` | **20 / 20 passed**: 16 Chromium, four mobile WebKit. |
+| `npm run test:e2e` | Final complete rerun: **16 / 16 passed**. |
+| `npm run test:production` | **Both browsers passed** actual audio, cursor, pause, seek, speed, resources, and layout. |
 
-新增兩列 PNG 與兩頁 PDF 的真實匯入測試；來源頁碼、跨界來源小節、原生 tieOrigin 關聯均驗證。每份八音測試譜含兩組延音，實際 alphaTab MIDI 產生器只發出六個音符事件；跨界來源在 2880 ticks，長度 1920 ticks，目的音 3840 ticks 沒有新的 NoteOn。0.75 倍速時，在 4100–4800 毫秒的延音區間同一瀏覽器畫面更新中讀取 RMS > 0.00001、目前第 2 小節與可見游標；暫停回到靜音。這些檢查對同列、跨列 PNG、跨頁 PDF 都執行，並非只檢查資料標記。
+Added real two-system PNG and two-page PDF import tests, verifying source pages, cross-boundary source bars, and native tieOrigin references. Each eight-note fixture contained two ties; the actual alphaTab MIDI generator emitted only six note events. The cross-boundary source began at 2880 ticks and lasted 1920 ticks; its destination at 3840 emitted no new NoteOn. At 0.75×, same-frame browser observations during the 4100–4800 ms sustain interval required RMS > 0.00001, current bar two, and a visible cursor. Pausing returned to silence. These checks covered same-system ties, cross-system PNG, and cross-page PDF, beyond merely checking data flags.
 
-手機 Chromium／WebKit 校對改用兩列原圖，確認無水平溢出、可操作延音、保存與還原草稿，修改前列來源品格會取消後列不相容延音且不覆蓋目的音高。反例驗證：只有一端半弧線、PDF 選 `1,3` 跳過中間頁，不會因品格相同就自動相接；仍可手動校對。像素單元測試涵蓋缺線、直線、不同弦與弧線方向。
+Mobile Chromium/WebKit correction used the two-system original image, verifying no horizontal overflow, usable tie controls, draft persistence, and restoration. Changing the earlier source fret removed the incompatible later tie without overwriting the destination pitch. Negative cases—only one partial arc, or selecting PDF pages `1,3` while skipping the middle—did not automatically connect matching frets; manual correction remained possible. Pixel tests covered missing lines, straight lines, different strings, and arc direction.
 
-首輪跨頁測試發現固定像素邊界留白在 PDF 放大後錯過弧線末端，已改為依譜線間距縮放。手機新增測試曾因測試輔助函式未開啟網站而中止，已補正初始化後整輪重跑。播放器首輪 14 / 16：一項音色準備超過 12 秒等待期限，另一項以固定等待一秒推算速度而把通訊延遲算入；測試改為允許 30 秒資源準備、用瀏覽器同時讀取時間與 tick 計算每秒速度，未改變速度驗收範圍，最終 16 項完整通過。沒有為通過測試修改音訊引擎或以獨立計時器控制游標。
+Initial cross-page tests found that a fixed-pixel margin missed arc ends when PDF rendering scaled up; margins now scale with staff spacing. A new mobile test initially failed because its helper did not open the site; initialization was corrected and the full round rerun. The first player run passed 14/16: one soundfont load exceeded 12 seconds, and one speed check included communication latency in a fixed one-second wait. Tests now allow 30 seconds for resources and calculate ticks/second from simultaneous in-browser time/tick reads. Speed acceptance bounds were unchanged; all 16 passed on the final complete rerun. Neither the audio engine nor an independent cursor timer was changed to satisfy tests.
 
-**支援邊界**：限清楚水平、單欄依序的六線譜；前列末音與下列首音均有可見同向半弧線、同弦同音且時值接續。跨頁須為連續選頁。單端缺失、手寫、斜拍、多欄、跨聲部、跳過事件或頁面、技巧與相似圓滑線仍需人工整理，不宣稱任意出版譜準確率。吉他延音自然衰減，並非保持固定音量。所有辨識在本機瀏覽器完成。
+**Scope:** clear horizontal, single-column tablature in reading order. The last note of one system and first of the next require visible compatible partial arcs, the same string/pitch, and contiguous timing. Cross-page ties require consecutive selected pages. Missing ends, handwriting, angled photos, multiple columns, cross-voice ties, skipped events/pages, techniques, and similar-looking slurs need manual work. No general published-score accuracy claim is made. Guitar sustains naturally decay rather than maintaining constant volume. Recognition runs locally in the browser.
 
-原創測試譜：`tests/fixtures/tab/cross-system-ties.png`、`tests/fixtures/tab/cross-page-ties.pdf`（頁碼 `1-2`）。
+Original fixtures: `tests/fixtures/tab/cross-system-ties.png`, `tests/fixtures/tab/cross-page-ties.pdf` (pages `1-2`). Later sections above supersede historical capabilities below.
 
-以下保留歷史紀錄，以本節結果與支援範圍為準。
+## Historical round: whole/half rests and final tie verification (2026-10-15)
 
-## 歷史回合：全／二分休止符與延音最終驗證（2026-10-15）
-
-| 檢查 | 最終結果 |
+| Check | Final result |
 | --- | --- |
-| `npm test` | **31 / 31 通過**，7 個測試檔。 |
-| `npm run build` | 通過；大型樂譜引擎 chunk 提示仍存在。 |
-| `PRACTICE_TEST_URL=http://localhost:4178 npm run test:tab` | **19 / 19 通過**，15 項 Chromium、4 項行動 WebKit。 |
-| `npm run test:e2e` | **16 / 16 通過**，完整重跑。 |
-| `npm run test:production` | **Chromium、WebKit 均通過**：實際音訊、暫停靜音、游標、跳轉、變速、資源及版面。 |
+| `npm test` | **31 / 31 passed**, seven test files. |
+| `npm run build` | Passed; large score-engine chunk warning remains. |
+| `PRACTICE_TEST_URL=http://localhost:4178 npm run test:tab` | **19 / 19 passed**: 15 Chromium, four mobile WebKit. |
+| `npm run test:e2e` | **16 / 16 passed**, complete rerun. |
+| `npm run test:production` | **Both browsers passed** actual audio, silence after pause, cursor, seek, speed, resources, and layout. |
 
-本輪修正的是音訊採樣測試的時機：先前從測試程序反覆查詢進度，再另外讀取聲音，通訊延遲可能讓採樣超過延音區間。現在播放前先在瀏覽器內準備觀察器，在同一畫面更新同時讀取音訊 RMS、播放進度、小節與游標。測試仍嚴格要求 0.75 倍速的 4100–4800 毫秒區間，不能放寬到下一次撥弦；跨小節延音由 3000 毫秒持續到 5000 毫秒。PNG 與 PDF 都測得 RMS > 0.00001、顯示第 2 小節且游標可見，暫停後回到靜音。這個觀察器只用於測試，不控制產品的播放或跟譜時間。
+This round corrected audio-sampling timing. Previously, repeated progress queries from the test process followed by a separate audio read could miss the sustain interval because of communication latency. A browser-side observer now starts before playback and reads RMS, progress, bar, and cursor in the same animation frame. Tests still strictly require the 4100–4800 ms interval at 0.75×, without extending into the next attack; the cross-bar tie spans 3000–5000 ms. Both PNG and PDF tests measured RMS > 0.00001, showed bar two and a visible cursor, then returned to silence after pause. The observer is test-only and does not control product playback or following.
 
-不重複撥弦另由實際 alphaTab MIDI 產生器驗證：跨小節三音延音鏈只產生 **1 次 NoteOn、總長 5760 ticks**；同時存在的未延音和弦音仍各自發聲。測試涵蓋同弦同音相接、修改品格、刪除來源、前一事件休止、前小節拍數不足及無效延音清理，避免錯接或改寫使用者音高。
+Actual alphaTab MIDI generation independently verified that a three-note cross-bar tie chain produces **one NoteOn with total duration 5760 ticks**. Simultaneous untied chord notes still attack separately. Tests cover matching strings/pitches, fret edits, source deletion, preceding rests, underfilled previous bars, and invalid-tie cleanup, preventing incorrect links or overwritten user pitches.
 
-全／二分休止符以原圖支撐線與方塊上下位置判別；拒絕浮動方塊及拍號 4 的底部誤判。實際 PNG／PDF 匯入與校對通過，全小節休止依 3/4、6/8 拍號計算，二分休止為兩個四分音符拍。手機校對、來源小節提示、草稿重新載入與修改後取消不相容延音均通過。
+Whole/half rests are distinguished by supporting lines and the block's vertical position. Floating blocks and the bottom of a time-signature 4 are rejected. Real PNG/PDF import and correction passed. Full-bar rests follow 3/4 and 6/8 meters; half rests last two quarter-note beats. Mobile correction, source-bar hints, draft reload, and removal of incompatible ties after edits passed.
 
-本輪測試期間未修改程式或重啟服務。以上是固定版本的完整最終結果，不以單項重跑代替整輪驗證。
+No code or service was changed/restarted during the final test run. These are complete final results for a fixed version, rather than isolated reruns presented as a full run.
 
-**限制**：自動延音候選限同一譜列的相鄰同弦同音，可跨小節；跨譜列／跨頁須手動校對。吉他音色自然衰減，延音不代表固定音量。新符號樣本為清晰印刷測試譜，不能當作各出版社、手寫或傾斜照片的辨識準確率；辨識後仍須確認。未新增外部圖片服務。
+**Limitations at that time:** automatic ties were limited to adjacent same-string/same-pitch notes within one system, including across bars. Cross-system/page ties required manual correction. Guitar audio naturally decays. Clear printed fixtures do not measure publisher, handwriting, or angled-photo accuracy; recognition still requires confirmation. No external image service was added.
 
-可重現測試譜：`tests/fixtures/tab/tied-study.png`、`tests/fixtures/tab/tied-study.pdf`、`tests/fixtures/tab/whole-half-rests.pdf`。上傳後選「吉他六線譜」，辨識、校對並確認後合成播放。
+Reproducible fixtures: `tests/fixtures/tab/tied-study.png`, `tests/fixtures/tab/tied-study.pdf`, `tests/fixtures/tab/whole-half-rests.pdf`. Upload, select Guitar tablature, recognize, correct, confirm, then play synthesized audio. Later rounds above supersede these historical limitations.
 
-以下為歷史紀錄，若與最新回合不同，以最新回合為準。
+## Historical round: tablature rhythm recognition (2026-10-15)
 
-## 歷史回合：六線譜節奏辨識（2026-10-15）
-
-| 檢查 | 本回合最終結果 |
+| Check | Final result in this round |
 | --- | --- |
-| `npm test` | **23 / 23 通過**，包含附點排除反覆點、明確括號／事件數判斷、實際合成時值、暫停後跳轉競態。 |
-| `npm run build` | 通過。大型樂譜引擎 chunk 提示仍存在。 |
-| 正式版 `PRACTICE_TEST_URL=http://localhost:4178 npm run test:tab` | **15 / 15 通過**：12 項 Chromium、3 項 WebKit 手機測試。 |
-| `npm run test:e2e` | 最終完整重跑 **16 / 16 通過**。 |
-| `npm run test:production` | Chromium、WebKit 均通過實際音訊輸出、暫停靜音、游標、跳轉、變速與版面檢查。 |
+| `npm test` | **23 / 23 passed**, including exclusion of repeat dots, explicit tuplet brackets/event counts, actual synthesized durations, and pause/seek races. |
+| `npm run build` | Passed; large score-engine chunk warning remains. |
+| Production `PRACTICE_TEST_URL=http://localhost:4178 npm run test:tab` | **15 / 15 passed**: 12 Chromium, three mobile WebKit. |
+| `npm run test:e2e` | Final complete rerun: **16 / 16 passed**. |
+| `npm run test:production` | Both browsers passed actual audio output, silence after pause, cursor, seek, speed, and layout. |
 
-新增實際影像流程：PNG 與 PDF 讀出單附點、八分／四分休止符；雙附點與十六分休止符讀自原圖；純休止符譜讀出四分至三十二分、含附點休止符；有端鉤括號的 3／5／6 連音只套用整組，不影響下一事件。修改附點／休止時值後，由保存的正確曲目讀回，alphaTab 播放時值為 `[1680, 240, 960, 960]` ticks，對應四拍。另驗證三連音 640 ticks、五連音 384 ticks；休止符沒有音符資料，整小節時間線為 3 秒（80 BPM）。
+New image workflows read single dots and eighth/quarter rests from PNG and PDF, double dots and sixteenth rests from source images, and quarter-to-thirty-second rests including dotted rests from rest-only scores. Bracketed triplets/quintuplets/sextuplets applied only to their entire group, without affecting the next event. After editing dots/rest durations, the correct saved score yielded alphaTab durations `[1680, 240, 960, 960]` ticks, totaling four beats. Triplets measured 640 ticks and quintuplets 384 ticks. Rests contained no note data; the whole-bar timeline lasted three seconds at 80 BPM.
 
-新增失敗情境：節奏字型資源無法載入會停止辨識，提供手動輸入入口；不產生假的完成結果。原有取消辨識、損壞圖片、數字資源失敗、草稿保存、雙位數品格、真實樂譜渲染器匯出圖與多頁 PDF 回歸均通過。
+Failure coverage: unavailable rhythm fonts stop recognition and offer manual entry without a false completed result. Existing cancellation, corrupt-image, missing digit-resource, draft, two-digit fret, actual renderer-export, and multi-page PDF regressions passed.
 
-首輪播放回歸為 15 / 16；追查到 alphaTab 非同步暫停回覆會把游標拉回舊拍點，覆蓋緊接著的跳轉。修正方式是暫存最後一次跳轉，等暫停事件處理完再交給同一音訊引擎。已用可重現的單元測試與完整 16 項回歸確認修復，未以獨立計時器推動游標。
+The initial playback regression passed 15/16. Investigation found that alphaTab's asynchronous pause response could move the cursor to an old beat, overwriting an immediate seek. The fix retains the latest seek and submits it to the same audio engine after pause processing. A reproducible unit test and complete 16-case regression verified the fix; no independent timer drives the cursor.
 
-限制：新符號測試是清晰印刷、Bravura 字型的合成測試譜，不是各出版社／手寫／傾斜照片的準確率評估。全／二分休止符、無括號或混合時值／巢狀連音、延音線仍須手動校對。沒有外部圖片辨識服務，也沒有宣稱自動完成校對。
+**Limitations at that time:** symbol fixtures were clear printed scores synthesized with Bravura, not publisher/handwriting/angled-photo accuracy studies. Whole/half rests, unbracketed or mixed-duration/nested tuplets, and ties required manual correction. No external recognition service or automatic-correction claim was made.
 
-可重現範例：`tests/fixtures/tab/rhythm-study.png`、`tests/fixtures/tab/rhythm-study.pdf`。這是一小節原創測試譜：附點四分音符、八分休止符、四分休止符、四分音符，共 4 拍。上傳後選「吉他六線譜」再辨識。
+Fixtures: `tests/fixtures/tab/rhythm-study.png` and `tests/fixtures/tab/rhythm-study.pdf`, an original four-beat bar with a dotted quarter note, eighth rest, quarter rest, and quarter note. Upload and select Guitar tablature to recognize it.
 
-以下保留前幾輪的歷史測試紀錄；目前結果以本節為準。
+The remaining sections preserve earlier test history. Later results above take precedence.
 
-## 結果
+## Historical baseline results
 
-| 檢查 | 結果 |
+| Check | Result |
 | --- | --- |
-| TypeScript 嚴格檢查及 Vite 正式建置 | 通過，產出 `dist/`。 |
-| Vitest 資料、音高、節奏、反覆、對齊與儲存 | **13 / 13 通過**。 |
-| Playwright 完整流程 | 本次整輪 **14 / 16 通過**；循環與預備拍／進度跳轉兩項定向重跑 **2 / 2 通過**。15 項 Chromium、1 項 WebKit 行動環境。 |
-| 正式產物冒煙測試 | **Chromium、WebKit 均通過**，量測到實際非零音訊輸出。 |
-| 最後修改的曲庫與損壞檔案回歸測試 | 通過。包含刪除後立即重新整理、重新載入示範曲，以及有效檔頭但內容截斷的 JPG。 |
-| npm audit | 0 個已知弱點；這是執行當時的套件資料庫結果，不代表全面安全稽核。 |
-| 正式版本網路請求 | 本次兩個引擎均為 0 第三方請求、0 HTTP 錯誤、0 未處理頁面例外。 |
+| Strict TypeScript checking and Vite production build | Passed; generated `dist/`. |
+| Vitest data, pitch, rhythm, repeats, alignment, and storage | **13 / 13 passed**. |
+| Playwright complete workflows | Full run: **14 / 16 passed**; targeted reruns of loop and count-in/progress-seek cases: **2 / 2 passed**. Fifteen Chromium cases and one mobile WebKit case. |
+| Production smoke tests | **Both browsers passed**, measuring actual nonzero audio output. |
+| Final library/corrupt-file regressions | Passed, including immediate reload after deletion, demo reload, and a truncated JPG with a valid header. |
+| npm audit | Zero known vulnerabilities in the package database at execution time; not a comprehensive security audit. |
+| Production network requests | Both engines recorded zero third-party requests, zero HTTP errors, and zero unhandled page exceptions. |
 
-正式建置保留 Vite 的大型 chunk 提示：樂譜引擎與 worker 超過預設 500 kB 警告門檻。這不是建置錯誤；仍需考慮首次載入成本，尚未進行慢速網路效能基準測試。
+Vite still warns that the score engine and worker exceed the default 500 kB chunk threshold. This is not a build error. Initial load cost remains relevant; no slow-network benchmark has been performed.
 
-## 使用者的十項驗收
+## Original ten acceptance scenarios
 
-| 情境 | 實際驗證方式與結果 |
+| Scenario | Actual verification and result |
 | --- | --- |
-| 1. 第一次開啟即可播放示範曲 | 全新瀏覽器儲存空間自動載入原創 16 小節曲。點擊播放後，實際 AudioNode 輸出 RMS 大於 0.001；有音訊樣本輸出。 |
-| 2. 匯入後顯示真實內容 | XML 與 MXL 都解析出四小節、120 BPM、首小節 MIDI 音高 `[64, 67, 休止, 59]`，對應原始測試檔；未使用示範曲替換。只有音高的 XML 顯示「系統建議指法」，且音高保持一致。 |
-| 3. 聲音位置與譜面高亮一致 | 播放快照直接來自 alphaSynth 的位置事件，驗證小節符合實際 tick，游標由同一 API 更新；正式版本也驗證播放時間、游標、跳小節與聲音輸出。 |
-| 4. 暫停同時停止聲音與游標 | 暫停後 tick 與游標樣式保持不變，音訊 RMS 降到 0.001 以下。 |
-| 5. 點擊小節一起跳轉 | 點擊第 3 小節後進入第 3 小節／tick 7680；進度條點擊、回到開頭也已實測。錄音模式點擊第 3 小節後對應人工設定的 5 秒。 |
-| 6. 變速後保持同步 | 120 BPM 樂譜切到 0.5× 顯示 60 BPM；音訊時鐘每秒約前進 960 ticks。另在播放中切換速度，驗證速度、位置與小節仍一致。合成引擎改變播放速率，不改寫 MIDI 音高。 |
-| 7. A–B 多次循環無累積漂移／重複音符 | 以 120 BPM 的單小節循環連續播放約 10.2 秒，觀察至少 4 次回跳。各循環週期在 2,000 ±150 ms；每個完整週期的 NoteOn 事件順序恰為 `[64, 67, 59]`，沒有多餘音符。 |
-| 8. 直式手機可閱讀與操作 | Chromium、WebKit iPhone 13 模擬尺寸 390×664，逐小節重排；播放鍵至少 44 px，沒有全頁水平溢出。另測 844×390 橫向，最後一小節能捲到控制列上方。 |
-| 9. 長譜自動跟隨 | 48 小節真實 MusicXML 測試。跳到第 20 小節並播放會自動捲動；手動滾輪瀏覽後停止拉回，按返回按鈕才恢復跟隨。 |
-| 10. 辨識失敗／資料不足有真實狀態 | 未標記 PDF 的播放鍵停用，提供框選小節入口。PNG 標記後僅產生休止符時間線與節拍引導。測試不支援的 GP5、損壞 XML、檔頭錯誤／內容截斷的 JPG、音色載入中斷及資料庫不可用，均顯示可採取的下一步。 |
+| 1. Play the demo on first visit | Fresh storage loads the original 16-bar composition. Clicking Play produces actual AudioNode RMS > 0.001. |
+| 2. Imports display actual file content | XML and MXL both yield four bars, 120 BPM, and first-bar MIDI pitches `[64, 67, rest, 59]`, matching the source without demo substitution. Pitch-only XML displays system-suggested fingering while retaining pitches. |
+| 3. Audio position matches score highlighting | Playback snapshots come directly from alphaSynth position events. Bars match actual ticks and the cursor updates through the same API. Production also verifies time, cursor, bar seeking, and audio output. |
+| 4. Pause stops audio and cursor together | Tick and cursor style stay unchanged; RMS falls below 0.001. |
+| 5. Clicking a bar seeks both | Clicking bar three reaches bar three/tick 7680. Timeline seeking and return-to-start are tested. Recording mode maps bar three to the manually assigned five seconds. |
+| 6. Speed changes remain synchronized | A 120 BPM score at 0.5× displays 60 BPM; its audio clock advances approximately 960 ticks/second. Changes during playback retain consistent speed, position, and bar. The synthesizer changes playback rate, not MIDI pitches. |
+| 7. Repeated A–B loops avoid drift/extra attacks | A single-bar loop at 120 BPM plays for approximately 10.2 seconds, with at least four returns. Periods are 2,000 ±150 ms; each full cycle's NoteOn order is exactly `[64, 67, 59]`, without extra notes. |
+| 8. Portrait mobile readability and controls | Chromium/WebKit iPhone 13 emulation at 390×664 reflows by bar. Play targets are at least 44 px; no page-wide horizontal overflow. At 844×390 landscape, the final bar can scroll above the controls. |
+| 9. Long-score following | A real 48-bar MusicXML fixture scrolls automatically after seeking to bar 20 and playing. Manual wheel browsing suspends following until the return control is pressed. |
+| 10. Honest failure/incomplete-data states | Unmarked PDFs disable playback and offer bar marking. Marked PNGs create only a rest timeline and beat guidance. Unsupported GP5, corrupt XML, invalid/truncated JPG, interrupted soundfont loading, and unavailable storage all show actionable next steps. |
 
-## 額外驗證
+## Additional baseline verification
 
-- MusicXML 休止符、指法、4/4 拍與播放總長；兩次反覆的實際小節序列為 `[1, 2, 1, 2, 3, 4]`。
-- 速度變化的四小節時長為 `[2, 2, 4, 4]` 秒，並非固定速度捲動。
-- 和弦伴奏依使用者設定的拍數與型態建立真正音符；明確標記不代表原曲編曲。
-- 手動對齊不完整、時間逆序、超出錄音長度時不能保存。確認後以 `HTMLAudioElement.currentTime` 跟譜，合成引擎保持停止，不會雙重發聲。
-- 錄音循環 B 點恰好等於 12 秒音檔結尾時，經過至少兩次回到 A 點仍繼續播放；實際觸發媒體 ended 事件後可以恢復循環，暫停後位置不再移動。
-- 保存時間對齊並關閉視窗時，校對用的原生音檔試聽會停止，避免和練習播放器重疊發聲；最後修改後另跑對應流程及正式版本測試，均通過。
-- 一小節預備拍期間 tick 不前進；結束後才開始樂譜播放。
-- 模擬視窗失焦後，聲音與游標一起暫停；提供繼續播放提示。
-- 搜尋、重新命名、刪除、清空曲庫、重新載入示範曲、速度與上次位置保存。
-- 儲存層序列化自動保存與刪除，驗證較舊保存不會使已刪除曲目復活。
-- JPG、PNG、PDF 原始預覽及本機保存。正式版本同時驗證 PDF worker、SoundFont 和字型資源。
-- 檢視桌面與手機專注模式實際截圖，修正游標覆蓋控制列的圖層問題。
+- MusicXML rests, fingering, 4/4, and total duration; actual repeated bar order `[1, 2, 1, 2, 3, 4]`.
+- Four-bar tempo-change durations `[2, 2, 4, 4]` seconds, ruling out fixed-speed scrolling.
+- Chord accompaniment creates actual notes from selected beats/patterns and explicitly does not represent the original arrangement.
+- Incomplete, reversed, or out-of-range manual timestamps cannot be saved. Confirmed recording mode follows `HTMLAudioElement.currentTime` while the synthesizer stays stopped, avoiding doubled audio.
+- A loop whose B endpoint equals the 12-second file ending continues through at least two returns to A. A real media ended event recovers looping; pause stops position changes.
+- Closing the alignment dialog after saving stops its native preview audio to avoid overlap with practice playback. The corresponding workflow and production tests passed after the final change.
+- Score ticks do not advance during the one-bar count-in; playback starts afterward.
+- Simulated window blur pauses audio/cursor together and offers a resume prompt.
+- Search, rename, delete, clear library, reload demo, and persistence of speed/last position.
+- Serialized autosave/delete operations prevent older writes from reviving deleted scores.
+- Original JPG/PNG/PDF previews and local persistence; production also verifies PDF worker, SoundFont, and font resources.
+- Reviewed actual desktop/mobile focused-mode screenshots and fixed cursor layering over controls.
 
-## 重現
+## Reproduction
 
 ```sh
 npm ci
@@ -239,72 +235,72 @@ npm run test:e2e
 npm run build
 ```
 
-正式版本：在另一個終端啟動 `npm run preview -- --port 4178`，再執行：
+For production, start `npm run preview -- --port 4178` in another terminal, then run:
 
 ```sh
 npm run test:production
 ```
 
-此命令使用本機 4178 連接埠，並讀取瀏覽器測試產生的 PDF 測試原稿；請先完成一次 `npm run test:e2e`。若要使用其他網址，設定 `PRACTICE_PREVIEW_URL`。
+This command uses local port 4178 and reads PDF fixtures generated by browser tests; run `npm run test:e2e` first. Set `PRACTICE_PREVIEW_URL` to use another URL.
 
-## 證據檔案
+## Evidence files
 
-- [正式桌面截圖](artifacts/production-chromium.png)
-- [正式 WebKit 手機專注模式](artifacts/production-webkit.png)
-- [手機一般模式](artifacts/mobile.png)
-- [PDF 預覽](artifacts/pdf-preview.png)
-- [正式版本機器可讀結果](artifacts/production-smoke.json)
-- `tests/music.test.ts`、`tests/storage.test.ts`、`tests/browser/`：可重跑的測試原始碼。
+- [Production desktop screenshot](artifacts/production-chromium.png)
+- [Production WebKit mobile focused mode](artifacts/production-webkit.png)
+- [Mobile normal mode](artifacts/mobile.png)
+- [PDF preview](artifacts/pdf-preview.png)
+- [Machine-readable production results](artifacts/production-smoke.json)
+- `tests/music.test.ts`, `tests/storage.test.ts`, and `tests/browser/`: rerunnable test sources.
 
-## 測試界線
+## Baseline test boundaries
 
-這些測試量測真實瀏覽器音訊樣本、MIDI 事件及播放狀態，**不是人耳的主觀音質驗收**，也沒有量測裝置喇叭或 Bluetooth 的實體輸出延遲。手機測試使用瀏覽器模擬，沒有拿實體 iPhone／iPad／Android 裝置測試。
+These tests measure actual browser audio samples, MIDI events, and playback state. They are **not subjective listening evaluations** and do not measure speaker or Bluetooth output latency. Mobile tests use browser emulation, not physical iPhones, iPads, or Android devices.
 
-目前只對 PCM WAV 做完整配對測試；MP3／M4A 是否能播放仍取決於瀏覽器和實際編碼。循環穩定性測試約十秒，不能推論所有裝置長時間背景播放的可靠性；產品在離開頁面時會暫停。
+Only PCM WAV received complete pairing tests. MP3/M4A playback depends on browser and codec. Loop stability was measured for approximately ten seconds and does not establish long-running background reliability on every device; the app pauses when leaving the page.
 
-新增本機 Audiveris OMR 與逐音符校對；沒有自動錄音對齊。辨識僅支援印刷五線譜，不支援純六線譜／手寫譜，照片品質會影響結果。MusicXML 只針對已列出的功能與 fixture 驗證，沒有宣稱完整涵蓋 MusicXML 規範、所有 Guitar Pro 格式或任意出版社的特殊演奏標記。完整限制見 README。
+At this historical stage, local Audiveris OMR and per-note correction had been added, but automatic recording alignment had not. Recognition supported printed standard notation, not pure tablature/handwriting, and depended on photo quality. MusicXML verification covers listed features and fixtures, not the entire specification, every Guitar Pro format, or arbitrary publisher-specific techniques. See README for current limitations.
 
-## 本次圖片／PDF 辨識新增驗收
+## Historical image/PDF recognition acceptance
 
-- Audiveris 5.11.0 真實執行，PNG、PDF、JPG 均輸出 MusicXML，校對頁呈現實際讀取的音符；沒有 mocked API 或預置旋律。
-- 原創四小節圖片中，引擎曾將 4/4 誤判為 6/4 並漏音。測試確認辨識到 E4、G4，人工修改拍號並補回原譜音符，確認後輸出音高序列與原譜完全一致。
-- 逐小節確認、拍數檢查、草稿保存／重新載入、確認後合成播放與游標同步均通過。
-- PDF 指定頁面與高解析 JPG 的實際辨識通過。低解析 JPG 曾辨識失敗，介面如實顯示提高解析度／手動輸入建議，沒有使用範例取代。
-- 手機 390 px 校對頁沒有全頁水平溢出；本機服務不可用時，可手動輸入並確認成可播放樂譜。
-- 服務拒絕偽造格式及超過 8 頁範圍；真實辨識工作可取消，取消後可接受新工作。
-- `npm run test:omr`：開發版及正式版各 4 / 4 通過。需要先啟動 `npm run omr`。
-- 新增 `tests/review.test.ts`：確認狀態、節奏錯誤攔截、音高修改、附點連音和弱起檢查。
-- 初次並行測試遇長時間執行停頓及測試輸出目錄衝突，未視為通過。改為序列執行並避免系統閒置睡眠後重新驗證。首版低解析 JPG fixture 辨識失敗，改用清晰原稿測試，保留失敗限制說明。
+- Actual Audiveris 5.11.0 runs exported MusicXML from PNG, PDF, and JPG. Correction displayed recognized notes without mocked APIs or preset melodies.
+- The original four-bar image was initially misread as 6/4 instead of 4/4, with missing notes. Tests verified recognized E4/G4, manually corrected the meter and missing notes, and confirmed a final pitch sequence matching the source exactly.
+- Per-bar confirmation, beat validation, draft save/reload, confirmed synthesis, and cursor synchronization passed.
+- Selected PDF pages and high-resolution JPG recognition passed. A low-resolution JPG failed; the UI honestly suggested higher resolution/manual entry without demo substitution.
+- At 390 px, correction had no page-wide horizontal overflow. If the local service was unavailable, manual entry could still produce a confirmed playable score.
+- The service rejected forged formats and ranges exceeding eight pages. Actual recognition could be canceled, after which new jobs were accepted.
+- `npm run test:omr`: **4 / 4 passed** on development and production builds. Start `npm run omr` first.
+- Added `tests/review.test.ts` for confirmation state, rhythm validation, pitch edits, dotted rhythms/tuplets, and pickup bars.
+- Initial concurrent tests stalled and conflicted over output directories; these were not counted as passes. Sequential runs with idle sleep prevented were reverified. An initial low-resolution JPG fixture failed; a clear original was used for the successful test, retaining the failure limitation.
 
-證據：`artifacts/recognized-playback.png`、`artifacts/mobile-recognition.png`；測試原稿：`tests/fixtures/omr/`。這些是原創測試資料，不是對任意樂譜辨識準確率的統計評估。PDF 多頁上限有輸入驗證測試；此次實際 OMR 樣本為單頁，未宣稱任意八頁複雜譜均已驗證。
+Evidence: `artifacts/recognized-playback.png`, `artifacts/mobile-recognition.png`; original fixtures: `tests/fixtures/omr/`. These original fixtures are not statistical recognition-accuracy studies. Multi-page limits have input-validation coverage; actual OMR examples in this round were single-page, without claims that arbitrary complex eight-page scores were verified.
 
-本次回歸仍觀察到播放計時／跳轉斷言的間歇性失敗（循環暫停後小節邊界、暫停後立即點進度條），無程式修改的定向重跑兩項均通過。不能將此視為已完全排除所有裝置的時間邊界問題；測試保留原斷言，未放寬容差。
+Regression still showed intermittent timing/seek assertion failures at a bar boundary after loop pause and during immediate timeline seeking after pause. Both targeted reruns passed without code changes. This did not establish elimination of timing-boundary issues on all devices; original assertions and tolerances were retained.
 
-正式版本測試另外發現「保存草稿後立即重新整理」的寫入競態，已改成等待 IndexedDB 寫入與目前曲目記錄完成後才關閉匯入／校對視窗。測試在視窗關閉後立即重新整理驗證草稿恢復。
+Production testing also found an immediate-reload-after-draft-save write race. Import/correction dialogs now wait for IndexedDB writes and the current-score record before closing. Tests reload immediately after closure to verify restoration.
 
-最後正式產物驗證：`PRACTICE_TEST_URL=http://localhost:4178 npm run test:omr` 4/4 通過；`npm run test:production` Chromium、WebKit 均通過，實際量測非零音訊及暫停靜音，0 第三方請求、0 HTTP 錯誤、0 頁面例外。
+Final production verification: `PRACTICE_TEST_URL=http://localhost:4178 npm run test:omr` **4/4 passed**. `npm run test:production` passed in Chromium/WebKit with actual nonzero audio, silence after pause, zero third-party requests, zero HTTP errors, and zero page exceptions.
 
-## 本次六線譜辨識驗收（2026-10-15）
+## Historical tablature recognition acceptance (2026-10-15)
 
-使用 Tesseract.js 6.0.1 真實 OCR，無假辨識 API。測試原稿位於 `tests/fixtures/tab/`，可用 `scripts/create-tab-fixture.mjs` 重建原創幾何測試譜；另測 alphaTab 實際製譜輸出的六線譜截圖。
+Used actual Tesseract.js 6.0.1 OCR without a fake recognition API. Original fixtures are in `tests/fixtures/tab/`, reproducible with `scripts/create-tab-fixture.mjs`. Tests also used tablature screenshots exported by the actual alphaTab renderer.
 
-- PNG 的 1 弦 0 品、2 弦 3 品、3 弦 12 品、6 弦 10 品辨識；弦品修改、Capo 2 導出的實際 MIDI 音高、節奏確認撤銷、草稿重載、聲音 RMS、游標與 0.5× 變速。
-- JPG 與真實兩頁 PDF（指定 1–2 頁），核對第二頁來源與雙位數品格。
-- 垂直對齊數字分組為同時發聲的不同弦；依可見符槓產生八分音符候選，拍號改成 3/4 後才通過拍數檢查。
-- 取消後重新辨識、390 px 手機校對、空白圖片失敗、OCR 資源載入失敗的手動替代流程。
-- WebKit 手機實測發現 IndexedDB 直接保存圖片 Blob 失敗，已改成位元組保存／讀取時還原 Blob；同一流程重新驗證草稿保存與恢復。
-- 比對實際製譜輸出時，修正把超出弦區的符桿／播放游標誤認為小節線的問題。來源截圖移除播放器控制列及播放游標，避免把介面遮擋當成完整譜面。
-- 較窄的「1」曾因圖形過濾而漏讀，已調整過濾規則並通過同時發聲測試。品格數字與符桿相連的樣本仍可能誤讀，保留 `touching-stem.png` 作為已知限制；不宣稱任意照片的準確率。
+- PNG recognition of string 1/fret 0, string 2/fret 3, string 3/fret 12, and string 6/fret 10; string/fret edits, actual MIDI pitches with capo 2, rhythm-confirmation invalidation, draft reload, audio RMS, cursor, and 0.5× speed.
+- JPG and actual two-page PDF imports (pages 1–2), checking page-two provenance and two-digit frets.
+- Vertically aligned digits grouped as simultaneous notes on different strings; visible beams generated eighth-note candidates. Beat validation passed only after changing the meter to 3/4.
+- Recognition after cancellation, 390 px mobile correction, blank-image failure, and manual fallback when OCR resources failed to load.
+- Mobile WebKit revealed that saving image Blobs directly to IndexedDB failed. Storage now uses bytes and reconstructs Blobs on read; the same draft save/restore flow was reverified.
+- Actual renderer output revealed stems/cursors outside the string area being mistaken for barlines; detection was corrected. Source screenshots exclude player controls and cursor to avoid treating obscured notation as a complete score.
+- Narrow digit “1” was initially filtered out. Adjusted filtering passed simultaneous-note tests. Digits touching stems may still be misread; `touching-stem.png` remains a known-limit fixture, without general photo-accuracy claims.
 
-單元測試新增六線幾何、小節線、可見符桿／符槓、PDF 頁碼、獨立節奏與調弦確認門檻、同一拍同弦衝突，以及位元組格式原檔保存／還原。現有五線譜辨識及音訊流程仍使用原有引擎。
+Unit tests added six-line geometry, barlines, visible stems/beams, PDF page numbers, separate rhythm/tuning confirmation gates, conflicting notes on the same string/beat, and original-file byte storage/restoration. Existing standard-notation recognition and audio workflows retained their engines.
 
-新增操作測試：`npm run test:tab`。證據：`artifacts/tab-playback.png`、`artifacts/tab-mobile-review.png`。手機測試是 Playwright WebKit／Chromium 模擬，並非實體裝置。無節奏標示的 TAB 不會靠間距還原時值；不支援的技巧、旗尾、休止符與複雜反覆需手動輸入或改用 MusicXML。
+New browser command: `npm run test:tab`. Evidence: `artifacts/tab-playback.png`, `artifacts/tab-mobile-review.png`. Mobile tests use Playwright WebKit/Chromium emulation, not physical devices. Unmarked TAB spacing is not treated as rhythm. At this stage, unsupported techniques, flags, rests, and complex repeats required manual entry or MusicXML.
 
-本次六線譜最終回歸紀錄：
+Final regression record for that round:
 
-- 單元測試 18/18 通過。
-- 一次序列執行 28 個瀏覽器情境：26 通過；手動框選 PNG 測試在非同步保存完成前讀到舊引擎，已改成等待匯入視窗關閉；另修正播放進度條只有 3 px 的點擊區域，擴大為 44 px。修正後對應兩項及手機直橫式布局共 3/3 定向測試通過，未放寬音訊時間容差。
-- 此輪既有 A–B 循環、長譜跟隨、錄音對齊／檔尾循環、曲庫、MusicXML、五線譜實際 OMR 與 WebKit 播放測試均通過。
-- 六線譜瀏覽器測試包含 7 項 Chromium 及 1 項 WebKit 手機流程，共 8 項。所有辨識測試使用實際原稿及 OCR；只有缺少資源情境刻意中斷資源請求以驗證錯誤處理。
+- **18/18 unit tests passed**.
+- One sequential 28-scenario browser run passed 26. The manual PNG-marking test read the old engine before asynchronous saving completed; it now waits for the import dialog to close. The progress slider also had only a 3 px hit area, expanded to 44 px. The two corresponding cases plus portrait/landscape mobile layout passed **3/3 targeted tests**, without relaxed audio timing tolerances.
+- Existing A–B loops, long-score following, recording alignment/end-of-file looping, library, MusicXML, actual standard-notation OMR, and WebKit playback passed.
+- Tablature browser coverage comprised seven Chromium cases and one mobile WebKit case, eight total. Every recognition test used actual sources/OCR; only missing-resource cases deliberately interrupted requests to verify error handling.
 
-正式版最終驗證：`PRACTICE_TEST_URL=http://localhost:4178 npm run test:tab` **8/8 通過**；`npm run test:production` Chromium、WebKit 皆通過實際音訊、暫停、跳轉、調速及布局測試。
+Final production verification: `PRACTICE_TEST_URL=http://localhost:4178 npm run test:tab` **8/8 passed**. `npm run test:production` passed actual audio, pause, seek, speed, and layout checks in both browsers.
