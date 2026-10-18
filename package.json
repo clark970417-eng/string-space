@@ -1,0 +1,45 @@
+{
+  "name": "string-space",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "vitest run",
+    "test:e2e": "playwright test --project=chromium --project=webkit",
+    "test:production": "node scripts/production-smoke.mjs",
+    "postinstall": "node scripts/copy-assets.mjs",
+    "format": "prettier --write src tests scripts *.ts *.json",
+    "test:omr": "playwright test --project=omr",
+    "omr": "node server/omr.mjs",
+    "omr:setup": "node scripts/setup-omr.mjs",
+    "test:tab": "playwright test --project=tab --project=tab-webkit"
+  },
+  "dependencies": {
+    "@coderline/alphatab": "1.8.4",
+    "@tesseract.js-data/eng": "1.0.0",
+    "fflate": "^0.8.3",
+    "fft.js": "4.0.4",
+    "idb": "8.0.3",
+    "lucide-react": "^0.468.0",
+    "pdfjs-dist": "5.4.296",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tesseract.js": "6.0.1"
+  },
+  "devDependencies": {
+    "@coderline/alphatab-vite": "^1.8.4",
+    "@playwright/test": "^1.60.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "fake-indexeddb": "^6.2.5",
+    "jsdom": "^26.1.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "vite": "7.3.6",
+    "vitest": "^5.0.4"
+  }
+}

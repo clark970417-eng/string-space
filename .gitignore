@@ -1,0 +1,18 @@
+node_modules/
+dist/
+public/alphatab/
+test-results/
+playwright-report/
+*.tsbuildinfo
+
+.omr-runtime/
+
+# Generated unmodified dependency assets; recreated by postinstall / Vite.
+public/ocr/
+public/font/
+public/soundfont/
+test-results*/
+.DS_Store
+.env
+.env.*
+!.env.example

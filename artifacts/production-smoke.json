@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-18T03:33:12.283Z",
+  "baseURL": "http://localhost:4178",
+  "results": [
+    {
+      "engine": "chromium",
+      "passed": true,
+      "externalRequests": 0,
+      "pageErrors": 0,
+      "httpErrors": 0
+    },
+    {
+      "engine": "webkit",
+      "passed": true,
+      "externalRequests": 0,
+      "pageErrors": 0,
+      "httpErrors": 0
+    }
+  ]
+}

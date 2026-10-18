@@ -1,0 +1,44 @@
+String Space / 弦間 — Third-party notices
+
+alphaTab 1.8.4 — Daniel Kuschny and contributors — MPL-2.0.
+Consumed unmodified as an npm dependency. Original sources and version history:
+https://github.com/CoderLine/alphaTab/tree/v1.8.4
+License: /licenses/alphaTab-MPL-2.0.txt
+
+Bundled SONiVOX SoundFont — Copyright (c) 2004-2006 Sonic Network Inc.
+Apache License 2.0, as distributed and documented by alphaTab.
+Notice: /licenses/SONiVOX-NOTICE.txt
+License text: /licenses/PDFjs-Apache-2.0.txt
+Official asset documentation: https://alphatab.net/docs/getting-started/installation-web
+
+Bravura music font — Steinberg Media Technologies GmbH.
+SIL Open Font License 1.1. /licenses/Bravura-OFL.txt
+
+PDF.js — Mozilla Foundation — Apache License 2.0.
+/licenses/PDFjs-Apache-2.0.txt
+https://github.com/mozilla/pdf.js
+
+React / React DOM — Meta Platforms, Inc. and affiliates — MIT.
+Vite — Evan You and contributors — MIT.
+Lucide — Lucide Contributors — ISC.
+idb — Jake Archibald — ISC.
+fflate — Arjun Barrett — MIT.
+Full runtime dependency license texts are bundled under /licenses/ as
+react-LICENSE.txt, react-dom-LICENSE.txt, lucide-react-LICENSE.txt,
+idb-LICENSE.txt, fflate-LICENSE.txt and scheduler-LICENSE.txt.
+
+The 16-bar “午後，慢慢彈” melody and its demonstration harmony were created
+specifically for this project. They are not a recording or transcription of
+an existing commercial song. Test audio is a generated sine-wave fixture
+and is never substituted for user uploads.
+
+Score processing, local TAB OCR, media decoding, alignment, soundfont synthesis
+and storage happen in the browser. Optional staff-score OCR uses a separately
+installed local Audiveris service, not an external recognition provider.
+
+fft.js 4.0.4 — Fedor Indutny — MIT.
+https://github.com/indutny/fft.js
+License: /licenses/fft.js-LICENSE.txt
+Used unmodified for local audio spectrum analysis. Subsequence DTW implementation
+and integration are project code, informed by the AudioLabs FMP method documentation.
+Audio auto-alignment runs locally in a Web Worker; user recordings are never uploaded.
