@@ -119,7 +119,8 @@ npm run test:production
 ```
 
 - Playwright 開發測試使用 5189；正式預覽使用 4178。
-- 自動對齊測試：`npx playwright test tests/browser/auto-alignment.spec.ts --project=chromium --project=webkit`。
+- 自動對齊測試：`npx playwright test tests/browser/auto-alignment.spec.ts --project=chromium --project=webkit`；加上 `PRACTICE_TEST_URL=http://localhost:4178` 可直接驗證正式版，包含真正音訊波形、原生半速與循環。
+- 最新正式版量測與結果會寫入 `artifacts/auto-alignment-verification-chromium.json`、`artifacts/auto-alignment-verification-webkit.json`。
 - 自製兩頁 PDF 與含前奏、非等速的 WAV 位於 `tests/fixtures/alignment/`。測試真實檔案讀取、OCR、解碼、背景分析、候選誤差、預覽、人工修改、翻頁與保存恢復；另驗證不相符音檔的拒絕流程。
 - 可執行 `node scripts/create-alignment-fixture.mjs` 重新產生上述測試資料（需先啟動 5189）。測試用錄音為原創諧波合成資料，不代表真實任意歌曲的準確率。
 - 若測試主機音訊硬體時鐘異常，Chromium 可用可選 `PRACTICE_SILENT_SINK=1` 將測試輸出末端設為虛擬輸出；不會修改產品的同步時鐘。是否使用會記在測試報告，WebKit 無此替代設定。

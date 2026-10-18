@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-18T03:46:58.047Z",
+  "url": "http://localhost:4178/",
+  "browser": "webkit",
+  "automaticAnchors": [
+    0.8,
+    3.12,
+    5.76
+  ],
+  "expectedAnchors": [
+    0.8,
+    3,
+    5.8
+  ],
+  "audibleRms": 0.11713200793486125,
+  "clockDifferenceSeconds": 0.0077430319843689865,
+  "halfSpeedRatio": 0.4995416881049858,
+  "loopClockDifferenceSeconds": 0.023912875039503234,
+  "passed": true
+}
